@@ -4,7 +4,7 @@ import { pdf } from "@react-pdf/renderer";
 import { ScorePdf } from "@/lib/ScorePdf";
 import { verdict, bandMicrocopy, QUESTIONS } from "@/lib/scoring";
 
-// ✅ Force Node runtime (react-pdf needs Node APIs)
+// Force Node runtime (react-pdf needs Node APIs)
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
@@ -20,12 +20,15 @@ export async function POST(req: Request) {
     .map((v: boolean, i: number) => (v ? null : QUESTIONS[i]))
     .filter(Boolean) as string[];
 
-  const doc = React.createElement(ScorePdf, {
-    score,
-    verdict: verdict(score),
-    micro: bandMicrocopy(),
-    gaps: gaps.length ? gaps : ["No gaps detected (rare)."],
-  });
+  // JSX is fine here because this file is .tsx
+  const doc = (
+    <ScorePdf
+      score={score}
+      verdict={verdict(score)}
+      micro={bandMicrocopy()}
+      gaps={gaps.length ? gaps : ["No gaps detected (rare)."]}
+    />
+  );
 
   try {
     const bytes = await pdf(doc).toBuffer();
@@ -38,7 +41,6 @@ export async function POST(req: Request) {
       },
     });
   } catch (e: any) {
-    // Temporary: return details so you can debug. Once stable, remove `detail`.
     return NextResponse.json(
       { error: "pdf_failed", detail: String(e?.message || e) },
       { status: 500 }
