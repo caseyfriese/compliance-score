@@ -70,13 +70,21 @@ export default function ScorePage() {
         body: JSON.stringify({ score, answers }),
       });
 
+      // If it fails, surface the server response in console (operator-friendly)
       if (!res.ok) {
-        // Keep UX quiet; you can replace with a toast later
-        alert("PDF generation failed. Try again.");
+        const msg = await res.text().catch(() => "");
+        console.error("PDF generation failed:", res.status, msg);
+        alert(`PDF generation failed (${res.status}). Check console.`);
         return;
       }
 
       const blob = await res.blob();
+      if (!blob || blob.size === 0) {
+        console.error("PDF generation returned empty blob");
+        alert("PDF generation failed (empty output).");
+        return;
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

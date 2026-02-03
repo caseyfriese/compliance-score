@@ -38,6 +38,10 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontWeight: "bold",
   },
+  micro: {
+    marginTop: 6,
+    color: "#374151",
+  },
   section: {
     marginTop: 16,
   },
@@ -65,13 +69,13 @@ export function ScorePdf({ score, verdict, micro, gaps }: PdfProps) {
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Compliance Reality Breakdown</Text>
         <Text style={styles.subtitle}>
-          A snapshot of how your compliance operates under pressure.
+          A snapshot of how your compliance behaves under pressure.
         </Text>
 
         <View style={styles.scoreBox}>
           <Text style={styles.score}>{score} / 100</Text>
           <Text style={styles.verdict}>{verdict}</Text>
-          <Text>{micro}</Text>
+          <Text style={styles.micro}>{micro}</Text>
         </View>
 
         <View style={styles.section}>
@@ -84,18 +88,10 @@ export function ScorePdf({ score, verdict, micro, gaps }: PdfProps) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            What operators usually address first
-          </Text>
-          <Text style={styles.bullet}>
-            • Evidence that survives outside audit windows
-          </Text>
-          <Text style={styles.bullet}>
-            • Ownership clarity (who actually fixes things)
-          </Text>
-          <Text style={styles.bullet}>
-            • Controls that fail quietly instead of loudly
-          </Text>
+          <Text style={styles.sectionTitle}>What operators usually fix first</Text>
+          <Text style={styles.bullet}>• Evidence that survives outside audit windows</Text>
+          <Text style={styles.bullet}>• Clear ownership (who actually has to act)</Text>
+          <Text style={styles.bullet}>• Controls that fail loudly (not silently)</Text>
         </View>
 
         <Text style={styles.footer}>
