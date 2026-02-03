@@ -8,22 +8,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid score" }, { status: 400 });
   }
 
-  // Try DB only if environment is configured.
-  // In dev (Codespaces), you probably don't have Vercel Postgres env vars yet.
   const hasDb =
     process.env.POSTGRES_URL ||
     process.env.POSTGRES_PRISMA_URL ||
     process.env.POSTGRES_URL_NON_POOLING;
 
   if (!hasDb) {
-    // Dev fallback: no DB, no benchmark.
     return NextResponse.json({ avgScore: 0, n: 0 });
   }
 
-  // Import only when DB exists, to avoid runtime failures
   const { sql } = await import("@vercel/postgres");
 
   try {
+    // 🔧 ONE-TIME BOOTSTRAP (safe to leave, but we'll remove it)
+    await sql`
+      create table if not exists submissions (
+        id bigserial primary key,
+        score int not null,
+        created_at timestamptz not null default now()
+      );
+    `;
+
     await sql`insert into submissions (score) values (${score});`;
 
     const { rows } = await sql`
@@ -39,7 +44,6 @@ export async function POST(req: Request) {
       n: rows?.[0]?.n ?? 0,
     });
   } catch (e) {
-    // If the DB exists but table isn't created yet, still return JSON
     return NextResponse.json({ avgScore: 0, n: 0 });
   }
 }
