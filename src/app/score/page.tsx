@@ -12,6 +12,7 @@ export default function ScorePage() {
   const [avg, setAvg] = useState<number | null>(null);
   const [n, setN] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const score = useMemo(() => scoreAnswers(answers), [answers]);
   const v = useMemo(() => verdict(score), [score]);
@@ -58,6 +59,33 @@ export default function ScorePage() {
     a.href = dataUrl;
     a.download = `compliance-score-${score}.png`;
     a.click();
+  };
+
+  const downloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      const res = await fetch("/api/pdf", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ score, answers }),
+      });
+
+      if (!res.ok) {
+        // Keep UX quiet; you can replace with a toast later
+        alert("PDF generation failed. Try again.");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `compliance-reality-${score}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setPdfBusy(false);
+    }
   };
 
   return (
@@ -126,7 +154,15 @@ export default function ScorePage() {
         <div className="stack">
           <div className="row" style={{ justifyContent: "space-between" }}>
             <div className="smallNote">Your result</div>
-            <button type="button" className="btn" onClick={() => location.reload()}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setSubmitted(false);
+                setAvg(null);
+                setN(null);
+              }}
+            >
               New run
             </button>
           </div>
@@ -151,8 +187,8 @@ export default function ScorePage() {
             <Bar label="Org average (30d)" value={avg ?? 0} />
 
             <div className="micro" style={{ marginTop: 12 }}>
-              Teams tend to score slightly higher than individuals — not because controls work better,
-              but because gaps are distributed.
+              Teams tend to score slightly higher than individuals — not because
+              controls work better, but because gaps are distributed.
             </div>
 
             {typeof n === "number" && (
@@ -162,22 +198,24 @@ export default function ScorePage() {
             )}
           </div>
 
-          {/* Subtle lead CTA */}
+          {/* PDF download (subtle CTA) */}
           <div className="card" style={{ maxWidth: 560 }}>
             <div style={{ fontSize: 16, fontWeight: 850 }}>
               Want to know where the gaps actually are?
             </div>
             <div className="micro">
-              Get a one-page breakdown of which answers impacted your score most and what operational teams typically address first.
+              Download a one-page breakdown of what impacted your score most and
+              what operational teams typically address first.
             </div>
 
             <div className="row" style={{ marginTop: 12 }}>
               <button
                 type="button"
                 className="btn"
-                onClick={() => alert("Wire this to PDF delivery later (email or Stripe). Keep it soft.")}
+                onClick={downloadPdf}
+                disabled={pdfBusy}
               >
-                Get the 1-page Reality Breakdown
+                {pdfBusy ? "Generating PDF…" : "Download 1-page Reality Breakdown (PDF)"}
               </button>
               <span className="smallNote">No mailing lists. No demos.</span>
             </div>
@@ -201,7 +239,9 @@ export default function ScorePage() {
             </button>
           </div>
 
-          <div className="smallNote">Built by an active security &amp; compliance operator.</div>
+          <div className="smallNote">
+            Built by an active security &amp; compliance operator.
+          </div>
         </div>
       )}
     </main>
@@ -212,12 +252,33 @@ function Bar({ label, value }: { label: string; value: number }) {
   const v = Math.max(0, Math.min(100, value));
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: 12,
+          color: "var(--muted)",
+        }}
+      >
         <span>{label}</span>
         <span>{v}</span>
       </div>
-      <div style={{ height: 10, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden", marginTop: 6 }}>
-        <div style={{ width: `${v}%`, height: "100%", background: "rgba(255,255,255,0.86)" }} />
+      <div
+        style={{
+          height: 10,
+          borderRadius: 999,
+          background: "rgba(255,255,255,0.08)",
+          overflow: "hidden",
+          marginTop: 6,
+        }}
+      >
+        <div
+          style={{
+            width: `${v}%`,
+            height: "100%",
+            background: "rgba(255,255,255,0.86)",
+          }}
+        />
       </div>
     </div>
   );
