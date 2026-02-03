@@ -6,12 +6,12 @@ let pool: Pool | null = null;
 function getPool() {
   if (pool) return pool;
 
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const connectionString = process.env.DATABASE_URL;
   if (!connectionString) return null;
 
   pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false }, // safe default for managed PG
+    ssl: { rejectUnauthorized: false },
     max: 5,
   });
 
@@ -27,13 +27,10 @@ export async function POST(req: Request) {
   }
 
   const p = getPool();
-  if (!p) {
-    // DB not connected to this deployment yet (env vars missing)
-    return NextResponse.json({ avgScore: 0, n: 0 });
-  }
+  if (!p) return NextResponse.json({ avgScore: 0, n: 0 });
 
   try {
-    // One-time bootstrap (idempotent)
+    // Bootstrap (safe to leave)
     await p.query(`
       create table if not exists submissions (
         id bigserial primary key,
@@ -56,8 +53,7 @@ export async function POST(req: Request) {
       avgScore: rows?.[0]?.avg_score ?? 0,
       n: rows?.[0]?.n ?? 0,
     });
-  } catch (e) {
-    // Keep the UI stable even if DB throws
+  } catch {
     return NextResponse.json({ avgScore: 0, n: 0 });
   }
 }

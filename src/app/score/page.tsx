@@ -8,10 +8,10 @@ type SubmitResp = { avgScore: number; n: number };
 
 export default function ScorePage() {
   const [answers, setAnswers] = useState<boolean[]>(Array(6).fill(false));
-  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState(false);
   const [avg, setAvg] = useState<number | null>(null);
   const [n, setN] = useState<number | null>(null);
-  const [busy, setBusy] = useState<boolean>(false);
+  const [busy, setBusy] = useState(false);
 
   const score = useMemo(() => scoreAnswers(answers), [answers]);
   const v = useMemo(() => verdict(score), [score]);
@@ -35,7 +35,6 @@ export default function ScorePage() {
         body: JSON.stringify({ score }),
       });
 
-      // Robust: handle non-JSON responses (e.g., dev without DB)
       const text = await res.text();
       let data: Partial<SubmitResp> = {};
       try {
@@ -62,228 +61,148 @@ export default function ScorePage() {
   };
 
   return (
-    <main
-      style={{
-        maxWidth: 860,
-        margin: "0 auto",
-        padding: "40px 20px",
-        fontFamily: "system-ui",
-      }}
-    >
+    <main className="container">
       {!submitted ? (
-        <>
-          <h1 style={{ fontSize: 34, marginBottom: 6 }}>Answer yes or no.</h1>
-          <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 22 }}>
-            No explanations. No caveats.
+        <div className="stack">
+          <div className="card">
+            <div className="kicker">Answer yes or no</div>
+            <h1 className="h1" style={{ marginTop: 10, fontSize: 38 }}>
+              No explanations. No caveats.
+            </h1>
+            <p className="sub" style={{ marginBottom: 0 }}>
+              If this feels “unfair,” that’s usually the point.
+            </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="stack">
             {QUESTIONS.map((q, i) => (
-              <div
-                key={i}
-                style={{
-                  border: "1px solid rgba(0,0,0,0.10)",
-                  borderRadius: 14,
-                  padding: 16,
-                  background: "#fff",
-                }}
-              >
-                <div style={{ fontSize: 16, lineHeight: 1.35, marginBottom: 10 }}>
+              <div className="card tight" key={i}>
+                <div style={{ fontSize: 16, lineHeight: 1.35, fontWeight: 650 }}>
                   {q}
                 </div>
 
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    type="button"
-                    onClick={() => toggle(i, true)}
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: answers[i] ? "2px solid #111" : "1px solid rgba(0,0,0,0.15)",
-                      background: answers[i] ? "#111" : "#fff",
-                      color: answers[i] ? "#fff" : "#111",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Yes
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => toggle(i, false)}
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: !answers[i] ? "2px solid #111" : "1px solid rgba(0,0,0,0.15)",
-                      background: !answers[i] ? "#111" : "#fff",
-                      color: !answers[i] ? "#fff" : "#111",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    No
-                  </button>
+                <div className="row" style={{ marginTop: 12 }}>
+                  <div className="pillGroup">
+                    <button
+                      type="button"
+                      className={`pill ${answers[i] ? "active" : ""}`}
+                      onClick={() => toggle(i, true)}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      className={`pill ${!answers[i] ? "active" : ""}`}
+                      onClick={() => toggle(i, false)}
+                    >
+                      No
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={submit}
-              disabled={busy}
-              style={{
-                padding: "12px 16px",
-                borderRadius: 12,
-                border: "none",
-                background: "#111",
-                color: "#fff",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              {busy ? "Scoring…" : "See my score"}
-            </button>
-
-            <div style={{ fontSize: 13, opacity: 0.65 }}>{bandMicrocopy()}</div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 18 }}>
-            <div
-              ref={cardRef}
-              style={{
-                width: "100%",
-                maxWidth: 520,
-                borderRadius: 18,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "#fff",
-                padding: 24,
-              }}
-            >
-              <div style={{ fontSize: 12, letterSpacing: 1.2, opacity: 0.65 }}>
-                COMPLIANCE THEATER SCORE
-              </div>
-
-              <div style={{ fontSize: 72, fontWeight: 800, marginTop: 8, lineHeight: 1 }}>
-                {score} / 100
-              </div>
-
-              <div style={{ fontSize: 18, fontWeight: 650, marginTop: 10 }}>{v}</div>
-
-              <div style={{ fontSize: 13, opacity: 0.7, marginTop: 10 }}>{bandMicrocopy()}</div>
-
-              <div style={{ fontSize: 12, opacity: 0.6, marginTop: 18 }}>
-                Measured in minutes. Not binders.
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 18,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "#fff",
-                padding: 18,
-                maxWidth: 520,
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>How you compare</div>
-
-              <Bar label="Your score" value={score} />
-              <div style={{ height: 10 }} />
-              <Bar label="Org average (30d)" value={avg ?? 0} />
-
-              <div style={{ marginTop: 12, fontSize: 13, opacity: 0.7 }}>
-                Teams tend to score slightly higher than individuals — not because controls work better, but because gaps are distributed.
-              </div>
-
-              {typeof n === "number" && n > 0 && (
-                <div style={{ marginTop: 8, fontSize: 12, opacity: 0.55 }}>
-                  Benchmark based on {n} anonymous submissions in the last 30 days.
-                </div>
-              )}
-            </div>
-
-            <div
-              style={{
-                borderRadius: 18,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "#fff",
-                padding: 18,
-                maxWidth: 520,
-              }}
-            >
-              <div style={{ fontSize: 16, fontWeight: 800 }}>Want to know where the gaps actually are?</div>
-              <div style={{ fontSize: 13, opacity: 0.75, marginTop: 6 }}>
-                Get a one-page breakdown of which answers impacted your score most and what operational teams typically address first.
-              </div>
-
+          <div className="card">
+            <div className="row">
               <button
                 type="button"
-                onClick={() => alert("Wire this to email capture or Stripe later. Keep it soft.")}
-                style={{
-                  marginTop: 12,
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(0,0,0,0.15)",
-                  background: "#fff",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className="btn btnPrimary"
+                onClick={submit}
+                disabled={busy}
+              >
+                {busy ? "Scoring…" : "See my score"}
+              </button>
+
+              <div className="smallNote">{bandMicrocopy()}</div>
+            </div>
+
+            <div className="footerLine">
+              Tip: screenshot the result or download the share card.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="stack">
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="smallNote">Your result</div>
+            <button type="button" className="btn" onClick={() => location.reload()}>
+              New run
+            </button>
+          </div>
+
+          {/* Share card */}
+          <div className="card" ref={cardRef} style={{ maxWidth: 560 }}>
+            <div className="kicker">Compliance theater score</div>
+            <div className="bigScore">{score} / 100</div>
+            <div className="verdict">{v}</div>
+            <div className="micro">{bandMicrocopy()}</div>
+            <div className="footerLine">Measured in minutes. Not binders.</div>
+          </div>
+
+          {/* Comparison */}
+          <div className="card" style={{ maxWidth: 560 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>
+              How you compare
+            </div>
+
+            <Bar label="Your score" value={score} />
+            <div style={{ height: 10 }} />
+            <Bar label="Org average (30d)" value={avg ?? 0} />
+
+            <div className="micro" style={{ marginTop: 12 }}>
+              Teams tend to score slightly higher than individuals — not because controls work better,
+              but because gaps are distributed.
+            </div>
+
+            {typeof n === "number" && (
+              <div className="smallNote" style={{ marginTop: 8 }}>
+                Benchmark based on {n} anonymous submissions in the last 30 days.
+              </div>
+            )}
+          </div>
+
+          {/* Subtle lead CTA */}
+          <div className="card" style={{ maxWidth: 560 }}>
+            <div style={{ fontSize: 16, fontWeight: 850 }}>
+              Want to know where the gaps actually are?
+            </div>
+            <div className="micro">
+              Get a one-page breakdown of which answers impacted your score most and what operational teams typically address first.
+            </div>
+
+            <div className="row" style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => alert("Wire this to PDF delivery later (email or Stripe). Keep it soft.")}
               >
                 Get the 1-page Reality Breakdown
               </button>
-
-              <div style={{ fontSize: 12, opacity: 0.6, marginTop: 8 }}>
-                Delivered as a short PDF. No mailing lists. No demos.
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={downloadCard}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  border: "none",
-                  background: "#111",
-                  color: "#fff",
-                  fontWeight: 800,
-                  cursor: "pointer",
-                }}
-              >
-                Download share card (PNG)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSubmitted(false);
-                  setAvg(null);
-                  setN(null);
-                }}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(0,0,0,0.15)",
-                  background: "#fff",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Retake
-              </button>
-            </div>
-
-            <div style={{ fontSize: 12, opacity: 0.55, marginTop: 4 }}>
-              Built by an active security &amp; compliance operator.
+              <span className="smallNote">No mailing lists. No demos.</span>
             </div>
           </div>
-        </>
+
+          <div className="row">
+            <button type="button" className="btn btnPrimary" onClick={downloadCard}>
+              Download share card (PNG)
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setSubmitted(false);
+                setAvg(null);
+                setN(null);
+              }}
+            >
+              Retake
+            </button>
+          </div>
+
+          <div className="smallNote">Built by an active security &amp; compliance operator.</div>
+        </div>
       )}
     </main>
   );
@@ -293,12 +212,12 @@ function Bar({ label, value }: { label: string; value: number }) {
   const v = Math.max(0, Math.min(100, value));
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.75 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)" }}>
         <span>{label}</span>
         <span>{v}</span>
       </div>
-      <div style={{ height: 10, borderRadius: 999, background: "rgba(0,0,0,0.08)", overflow: "hidden", marginTop: 6 }}>
-        <div style={{ width: `${v}%`, height: "100%", background: "#111" }} />
+      <div style={{ height: 10, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden", marginTop: 6 }}>
+        <div style={{ width: `${v}%`, height: "100%", background: "rgba(255,255,255,0.86)" }} />
       </div>
     </div>
   );
