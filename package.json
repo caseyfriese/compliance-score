@@ -12,6 +12,7 @@
     "@vercel/postgres": "^0.10.0",
     "html-to-image": "^1.11.13",
     "next": "16.1.6",
+    "pg": "^8.18.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
