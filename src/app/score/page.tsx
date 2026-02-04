@@ -56,7 +56,7 @@ export default function ScorePage() {
     const dataUrl = await toPng(cardRef.current, { pixelRatio: 2 });
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = `compliance-score-${score}.png`;
+    a.download = `ai-risk-score-${score}.png`;
     a.click();
   };
 
@@ -67,10 +67,10 @@ export default function ScorePage() {
           <div className="card">
             <div className="kicker">Answer yes or no</div>
             <h1 className="h1" style={{ marginTop: 10, fontSize: 38 }}>
-              No explanations. No caveats.
+              How risky is your AI use to your company?
             </h1>
             <p className="sub" style={{ marginBottom: 0 }}>
-              If this feels “unfair,” that’s usually the point.
+              A quick self-check based on how you actually use AI day to day.
             </p>
           </div>
 
@@ -141,17 +141,17 @@ export default function ScorePage() {
 
           {/* Share card */}
           <div className="card" ref={cardRef} style={{ maxWidth: 560 }}>
-            <div className="kicker">Compliance theater score</div>
+            <div className="kicker">AI risk exposure score</div>
             <div className="bigScore">{score} / 100</div>
             <div className="verdict">{v}</div>
             <div className="micro">{bandMicrocopy()}</div>
-            <div className="footerLine">Measured in minutes. Not binders.</div>
+            <div className="footerLine">Measured by habits, not policy.</div>
           </div>
 
           {/* Comparison */}
           <div className="card" style={{ maxWidth: 560 }}>
             <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>
-              How you compare
+              How your risk compares
             </div>
 
             <Bar label="Your score" value={score} />
@@ -159,8 +159,8 @@ export default function ScorePage() {
             <Bar label="Org average (30d)" value={avg ?? 0} />
 
             <div className="micro" style={{ marginTop: 12 }}>
-              Teams tend to score slightly higher than individuals — not because
-              controls work better, but because gaps are distributed.
+              Most organizations score higher than expected because AI adoption enters
+              through individual habits before guardrails catch up.
             </div>
 
             {typeof n === "number" && (
@@ -188,9 +188,7 @@ export default function ScorePage() {
             </button>
           </div>
 
-          <div className="smallNote">
-            Built by an active security &amp; compliance operator.
-          </div>
+          <div className="smallNote">Built quietly by an operator.</div>
         </div>
       )}
     </main>
