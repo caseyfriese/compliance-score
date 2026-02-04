@@ -1,5 +1,4 @@
 import React from "react";
-import { NextResponse } from "next/server";
 import { pdf } from "@react-pdf/renderer";
 import { ScorePdf } from "@/lib/ScorePdf";
 import { verdict, bandMicrocopy, QUESTIONS } from "@/lib/scoring";
@@ -31,30 +30,21 @@ async function readableStreamToUint8Array(
   return out;
 }
 
-function toUint8Array(maybe: unknown): Uint8Array {
-  // Buffer (Node)
+function asUint8Array(maybe: unknown): Uint8Array {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const anyVal: any = maybe;
+  const v: any = maybe;
 
-  if (!anyVal) return new Uint8Array();
+  if (!v) return new Uint8Array();
 
-  // If it's already Uint8Array/Buffer-like
-  if (anyVal instanceof Uint8Array) return anyVal;
+  if (v instanceof Uint8Array) return v;
+  if (v instanceof ArrayBuffer) return new Uint8Array(v);
 
-  // If it's an ArrayBuffer
-  if (anyVal instanceof ArrayBuffer) return new Uint8Array(anyVal);
-
-  // If it looks like a Buffer (without importing Buffer types)
-  if (typeof anyVal?.byteLength === "number" && typeof anyVal?.slice === "function") {
-    try {
-      return new Uint8Array(anyVal);
-    } catch {
-      // fallthrough
-    }
+  // Buffer is a Uint8Array subclass, so this covers it too.
+  try {
+    return new Uint8Array(v);
+  } catch {
+    return new Uint8Array();
   }
-
-  // Last resort: empty
-  return new Uint8Array();
 }
 
 export async function POST(req: Request) {
@@ -63,7 +53,7 @@ export async function POST(req: Request) {
   const answers = body?.answers;
 
   if (typeof score !== "number" || !Array.isArray(answers)) {
-    return NextResponse.json({ error: "invalid input" }, { status: 400 });
+    return Response.json({ error: "invalid input" }, { status: 400 });
   }
 
   const gaps = answers
@@ -85,46 +75,43 @@ export async function POST(req: Request) {
       toStream?: () => Promise<unknown>;
     };
 
-    let out: Uint8Array;
+    let out: Uint8Array = new Uint8Array();
 
-    // Prefer toBuffer when available
     if (instance.toBuffer) {
       const maybe = await instance.toBuffer();
-      // If this came back as a ReadableStream (some typings / runtimes), handle it
       if (maybe && typeof (maybe as any)?.getReader === "function") {
         out = await readableStreamToUint8Array(maybe as ReadableStream<Uint8Array>);
       } else {
-        out = toUint8Array(maybe);
+        out = asUint8Array(maybe);
       }
     } else if (instance.toStream) {
       const maybeStream = await instance.toStream();
-      // If it’s a Web ReadableStream, buffer it
       if (maybeStream && typeof (maybeStream as any)?.getReader === "function") {
         out = await readableStreamToUint8Array(
           maybeStream as ReadableStream<Uint8Array>
         );
       } else {
-        // Node stream (rare here) — bail with a clear error
-        return NextResponse.json(
+        return Response.json(
           { error: "pdf_failed", detail: "Unsupported stream type from react-pdf" },
           { status: 500 }
         );
       }
     } else {
-      return NextResponse.json(
+      return Response.json(
         { error: "pdf_failed", detail: "No output method available from react-pdf" },
         { status: 500 }
       );
     }
 
     if (!out || out.length === 0) {
-      return NextResponse.json(
+      return Response.json(
         { error: "pdf_failed", detail: "Empty PDF output" },
         { status: 500 }
       );
     }
 
-    return new NextResponse(out, {
+    // ✅ Use native Response to avoid NextResponse BodyInit typing issues
+    return new Response(out.buffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="compliance-reality-${score}.pdf"`,
@@ -132,7 +119,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (e: any) {
-    return NextResponse.json(
+    return Response.json(
       { error: "pdf_failed", detail: String(e?.message || e) },
       { status: 500 }
     );
