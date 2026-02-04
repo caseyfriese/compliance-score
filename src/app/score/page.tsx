@@ -12,7 +12,6 @@ export default function ScorePage() {
   const [avg, setAvg] = useState<number | null>(null);
   const [n, setN] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
-  const [pdfBusy, setPdfBusy] = useState(false);
 
   const score = useMemo(() => scoreAnswers(answers), [answers]);
   const v = useMemo(() => verdict(score), [score]);
@@ -59,41 +58,6 @@ export default function ScorePage() {
     a.href = dataUrl;
     a.download = `compliance-score-${score}.png`;
     a.click();
-  };
-
-  const downloadPdf = async () => {
-    setPdfBusy(true);
-    try {
-      const res = await fetch("/api/pdf", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ score, answers }),
-      });
-
-      // If it fails, surface the server response in console (operator-friendly)
-      if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        console.error("PDF generation failed:", res.status, msg);
-        alert(`PDF generation failed (${res.status}). Check console.`);
-        return;
-      }
-
-      const blob = await res.blob();
-      if (!blob || blob.size === 0) {
-        console.error("PDF generation returned empty blob");
-        alert("PDF generation failed (empty output).");
-        return;
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `compliance-reality-${score}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } finally {
-      setPdfBusy(false);
-    }
   };
 
   return (
@@ -204,29 +168,6 @@ export default function ScorePage() {
                 Benchmark based on {n} anonymous submissions in the last 30 days.
               </div>
             )}
-          </div>
-
-          {/* PDF download (subtle CTA) */}
-          <div className="card" style={{ maxWidth: 560 }}>
-            <div style={{ fontSize: 16, fontWeight: 850 }}>
-              Want to know where the gaps actually are?
-            </div>
-            <div className="micro">
-              Download a one-page breakdown of what impacted your score most and
-              what operational teams typically address first.
-            </div>
-
-            <div className="row" style={{ marginTop: 12 }}>
-              <button
-                type="button"
-                className="btn"
-                onClick={downloadPdf}
-                disabled={pdfBusy}
-              >
-                {pdfBusy ? "Generating PDF…" : "Download 1-page Reality Breakdown (PDF)"}
-              </button>
-              <span className="smallNote">No mailing lists. No demos.</span>
-            </div>
           </div>
 
           <div className="row">
