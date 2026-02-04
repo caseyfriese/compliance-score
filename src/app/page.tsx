@@ -4,12 +4,15 @@ export default function Home() {
   return (
     <main className="container">
       <div className="card">
-        <div className="kicker">Compliance theater score</div>
+        <div className="kicker">AI usage reality check</div>
+
         <h1 className="h1" style={{ marginTop: 12 }}>
-          How much of your compliance actually works?
+          How risky is your AI use to your company?
         </h1>
+
         <p className="sub">
-          A 60-second reality check for people responsible for risk.
+          A 60-second self-check based on how you actually use AI day to day — not
+          how your policy says you should.
         </p>
 
         <div className="row" style={{ marginTop: 6 }}>
@@ -18,7 +21,7 @@ export default function Home() {
             href="/score"
             style={{ textDecoration: "none", display: "inline-block" }}
           >
-            Get your score
+            Check my AI risk
           </Link>
 
           <span className="smallNote">
@@ -28,9 +31,7 @@ export default function Home() {
 
         <div className="hr" />
 
-        <div className="smallNote">
-          Built by an active security &amp; compliance operator.
-        </div>
+        <div className="smallNote">Built quietly by an operator.</div>
       </div>
     </main>
   );
