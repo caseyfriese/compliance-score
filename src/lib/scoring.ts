@@ -1,15 +1,16 @@
 export type Answers = boolean[]; // length 6
 
 export const QUESTIONS: string[] = [
-  "Do you have written security / compliance policies that reflect how your organization actually operates today?",
-  "Have those policies been reviewed and updated within the last 12 months?",
-  "Can you prove, with evidence, that in-scope employees have acknowledged and followed those policies?",
-  "If an auditor asked tomorrow, could you produce complete, accurate evidence for your top 10 controls within 48 hours?",
-  "Do your technical controls actually enforce what sales, legal, or leadership claims you do?",
-  "If a control failed today, would you detect it automatically — or only discover it during an audit or incident?",
+  "Do you use AI to help you write or refine work emails, messages, or documents?",
+  "Have you ever pasted work-related information into an AI tool to get better results?",
+  "Do you use AI tools that you discovered on your own, rather than ones your company formally introduced?",
+  "Do you rely on AI output as a starting point without always saving or documenting what you asked it?",
+  "If someone asked you to list every AI tool you’ve used for work in the past month, would you have to think about it?",
+  "Has AI become something you reach for automatically when you’re under time pressure at work?",
 ];
 
-const WEIGHTS = [15, 15, 15, 15, 15, 25];
+// YES = risk present (weighted toward embedded habit + traceability issues)
+const WEIGHTS = [12, 18, 18, 18, 14, 20];
 
 export function scoreAnswers(a: Answers): number {
   if (a.length !== 6) throw new Error("Expected 6 answers");
@@ -19,13 +20,19 @@ export function scoreAnswers(a: Answers): number {
 }
 
 export function verdict(score: number): string {
-  if (score <= 29) return "Foundational gaps present.";
-  if (score <= 49) return "Policy-led, execution-constrained.";
-  if (score <= 69) return "Operational, with blind spots.";
-  if (score <= 84) return "Execution-driven and defensible.";
-  return "Audit-resilient by design.";
+  if (score <= 20) return "Low personal AI risk.";
+  if (score <= 40) return "Growing risk.";
+  if (score <= 60) return "Meaningful risk.";
+  if (score <= 80) return "High risk.";
+  return "Unmanaged risk.";
 }
 
 export function bandMicrocopy(): string {
-  return "Most organizations score between 35–55.";
+  const MICRO = [
+    "Most people underestimate how quickly AI becomes part of their workflow.",
+    "This score reflects habits, not intent.",
+    "Speed usually comes before guardrails.",
+    "AI risk often enters through individual behavior.",
+  ];
+  return MICRO[Math.floor(Math.random() * MICRO.length)];
 }
