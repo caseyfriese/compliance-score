@@ -3,7 +3,6 @@ import { pdf } from "@react-pdf/renderer";
 import { ScorePdf } from "@/lib/ScorePdf";
 import { verdict, bandMicrocopy, QUESTIONS } from "@/lib/scoring";
 
-// Force Node runtime (react-pdf needs Node APIs)
 export const runtime = "nodejs";
 
 async function readableStreamToUint8Array(
@@ -33,13 +32,10 @@ async function readableStreamToUint8Array(
 function asUint8Array(maybe: unknown): Uint8Array {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const v: any = maybe;
-
   if (!v) return new Uint8Array();
-
   if (v instanceof Uint8Array) return v;
   if (v instanceof ArrayBuffer) return new Uint8Array(v);
 
-  // Buffer is a Uint8Array subclass, so this covers it too.
   try {
     return new Uint8Array(v);
   } catch {
@@ -110,8 +106,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Use native Response to avoid NextResponse BodyInit typing issues
-    return new Response(out.buffer, {
+    // ✅ Force a real ArrayBuffer (not SharedArrayBuffer / ArrayBufferLike)
+    const ab = out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
+
+    return new Response(ab, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="compliance-reality-${score}.pdf"`,
